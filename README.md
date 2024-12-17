@@ -28,13 +28,6 @@
                 <sub>김용준</sub>
             </td>
             <td align="center">
-                <a href="https://github.com/MUJJINUNGAE">
-                    <img src="https://github.com/MUJJINUNGAE.png" width="100px;" alt=""/><br />
-                    <sub><b>MUJJINUNGAE</b></sub>
-                </a><br />
-                <sub>이진우</sub>
-            </td>
-            <td align="center">
                 <a href="https://github.com/wonjeongjeong">
                     <img src="https://github.com/wonjeongjeong.png" width="100px;" alt=""/><br />
                     <sub><b>wonjeongjeong</b></sub>
