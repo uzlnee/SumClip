@@ -47,7 +47,7 @@ def get_comments(youtube, video_id, max_results=10):
             )
 
     except Exception as e:
-        print(f"댓글 불러오기 중 오류 발생: {str(e)}")
+        print(f"댓글을 불러오는 중에 오류 발생: {str(e)}")
 
     return comments
 
@@ -60,7 +60,7 @@ def analyze_sentiment(client, text):
             messages=[
                 {
                     "role": "system",
-                    "content": "다음 댓글의 감정을 분석하세요. '긍정', '부정', '중립' 중 하나로만 답변하세요.",
+                    "content": "당신은 Youtube 영상의 댓글 감정 분류 전문가입니다. 다음 댓글의 감정을 분석하세요. 반드시 '긍정', '부정', '중립' 중 하나로만 답변하세요.",
                 },
                 {"role": "user", "content": text},
             ],
@@ -111,20 +111,15 @@ def main():
 
     print("\n=== 인기 댓글 감정 분석 결과 ===")
     for idx, row in df.iterrows():
-        print(f"\n{idx+1}번째 댓글:")
-        print(f"작성자: {row['author']}")
-        print(
-            f"내용: {row['text'][:100]}..."
-            if len(row["text"]) > 100
-            else f"내용: {row['text']}"
-        )
+        print(f"내용: {row['text']}")
         print(f"좋아요 수: {row['likes']}")
-        print(f"감정 분석: {row['sentiment']}")
+        print(f"감정 분석: {row['sentiment']}\n")
 
     # 감정 분석 통계
     sentiment_stats = df["sentiment"].value_counts()
     print("\n=== 감정 분석 통계 ===")
-    print(sentiment_stats)
+    for sentiment, count in sentiment_stats.items():
+        print(f"{sentiment}: {count}개")
 
 
 if __name__ == "__main__":
