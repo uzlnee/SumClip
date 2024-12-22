@@ -1,31 +1,30 @@
 import re
-import numpy as np
 from collections import Counter
-from wordcloud import WordCloud
-import networkx as nx
 
-import seaborn as sns
-import matplotlib.pyplot as plt
 import koreanize_matplotlib
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
 import plotly.express as px
-
+import plotly.graph_objects as go
+import seaborn as sns
 from kiwipiepy import Kiwi
 from kiwipiepy.utils import Stopwords
-
+from wordcloud import WordCloud
 
 # Kiwi 형태소 분석기 초기화
 kiwi = Kiwi()
+
 
 def extract_nouns_from_text(file_path):
     """
     주어진 텍스트 파일에서 명사만 추출하여 반환하는 함수
     """
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         text = file.read()
 
     # 텍스트에서 문장 단위로 나누기
-    sentences = text.split('\n')
+    sentences = text.split("\n")
 
     # 명사 추출
     nouns = []
@@ -33,10 +32,13 @@ def extract_nouns_from_text(file_path):
         result = kiwi.analyze(sentence)
         for item in result:
             for morpheme in item[0]:
-                if morpheme[1] == 'NNG' or morpheme[1] == 'NNP':  # 일반 명사(NNG), 고유 명사(NNP)
+                if (
+                    morpheme[1] == "NNG" or morpheme[1] == "NNP"
+                ):  # 일반 명사(NNG), 고유 명사(NNP)
                     nouns.append(morpheme[0])
 
     return nouns
+
 
 def create_cooccurrence_matrix(nouns, window_size=2):
     """
@@ -44,13 +46,14 @@ def create_cooccurrence_matrix(nouns, window_size=2):
     - window_size: 근접 단어를 고려할 범위
     """
     cooccurrence = Counter()
-    
+
     # 문장에서 단어들이 등장하는 간격을 기반으로 공동 출현 빈도 계산
     for i in range(len(nouns) - window_size + 1):
-        for j in range(i+1, min(i + window_size, len(nouns))):
+        for j in range(i + 1, min(i + window_size, len(nouns))):
             cooccurrence[(nouns[i], nouns[j])] += 1
             cooccurrence[(nouns[j], nouns[i])] += 1  # 양방향 관계
     return cooccurrence
+
 
 def generate_wordcloud(nouns):
     """
@@ -70,9 +73,10 @@ def generate_wordcloud(nouns):
 
     # 워드클라우드 시각화
     plt.figure(figsize=(10, 8))
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
     plt.show()
+
 
 def generate_sankey_diagram(cooccurrence):
     """
@@ -92,22 +96,18 @@ def generate_sankey_diagram(cooccurrence):
     value = [relation[2] for relation in relations]  # 공동 출현 빈도
 
     # Sankey Diagram 시각화
-    fig = go.Figure(go.Sankey(
-        node=dict(
-            pad=15,
-            thickness=20,
-            line=dict(color="black", width=0.5),
-            label=labels
-        ),
-        link=dict(
-            source=source,
-            target=target,
-            value=value
+    fig = go.Figure(
+        go.Sankey(
+            node=dict(
+                pad=15, thickness=20, line=dict(color="black", width=0.5), label=labels
+            ),
+            link=dict(source=source, target=target, value=value),
         )
-    ))
+    )
 
     fig.update_layout(title="Sankey Diagram", font_size=10)
     fig.show()
+
 
 def generate_barplot(nouns):
     """
@@ -121,15 +121,16 @@ def generate_barplot(nouns):
     words, freqs = zip(*top_words)
 
     # 색상 지정
-    colors = sns.color_palette('copper', 20)
+    colors = sns.color_palette("copper", 20)
 
     # 바 플롯 시각화 (내림차순)
     plt.figure(figsize=(10, 8))
     plt.barh(words, freqs, color=colors)
-    plt.xlabel('빈도수')
-    plt.title('Top 20 명사 빈도수 (내림차순)')
+    plt.xlabel("빈도수")
+    plt.title("Top 20 명사 빈도수 (내림차순)")
     plt.gca().invert_yaxis()  # 내림차순으로 정렬
     plt.show()
+
 
 def main(file_path):
     # 텍스트에서 명사 추출
@@ -146,4 +147,3 @@ def main(file_path):
 
     # 상위 20개 명사 빈도수 바 플롯 생성
     generate_barplot(nouns)
-

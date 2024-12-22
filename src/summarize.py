@@ -1,9 +1,12 @@
-import pandas as pd
 import os
+
 import openai
+import pandas as pd
+
+
 class summarizer:
     def __init__(self):
-        api_key = os.getenv('OPENAI_API_KEY')
+        api_key = os.getenv("OPENAI_API_KEY")
         self.client = openai.OpenAI(api_key=api_key)
 
     def generate(self, text):
@@ -22,17 +25,19 @@ class summarizer:
                 {
                     "role": "user",
                     "content": f"""{text}
-                                """
+                                """,
                 },
             ],
         )
         response = response.choices[0].message.content.strip()
         return response
-if __name__ == "__main__":
-    basepath = './video/'
-    df = pd.read_csv(basepath + 'segments.csv')
 
-    with open (basepath + 'all_text.txt', 'r', encoding = 'utf-8') as f:
+
+if __name__ == "__main__":
+    basepath = "./video/"
+    df = pd.read_csv(basepath + "segments.csv")
+
+    with open(basepath + "all_text.txt", "r", encoding="utf-8") as f:
         text = f.readline()
 
     # 환경 변수에서 API 키 불러오기
