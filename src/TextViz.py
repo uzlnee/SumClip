@@ -63,12 +63,12 @@ def generate_wordcloud(nouns):
 
     # 워드클라우드 생성
     wordcloud = WordCloud(
-        font_path="/Users/jeong-yujin/Desktop/SumClip/src/sumclipenv/lib/python3.11/site-packages/koreanize_matplotlib/fonts/NanumGothic.ttf",
+        font_path="/Users/kim-yongjun/Documents/부스트캠프 AI Tech 7기/Projects/subproject/lib/python3.11/site-packages/koreanize_matplotlib/fonts/NanumGothic.ttf",
         background_color="white",
         width=480,
         height=480,
         max_words=100,
-        # colormap="Blues"
+        colormap="Blues"
     ).generate_from_frequencies(word_freq)
 
     # 워드클라우드 시각화
