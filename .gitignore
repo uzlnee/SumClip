@@ -4,3 +4,5 @@
 __pycache__
 video
 .env.save
+.sumclipenv
+sumclipenv/
