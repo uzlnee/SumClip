@@ -1,0 +1,11 @@
+yt-dlp
+opencv-python
+moviepy
+openai-whisper
+fastapi
+uvicorn
+sqlalchemy
+python-multipart
+python-dotenv
+pydantic
+pydantic_settings

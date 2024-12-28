@@ -1,0 +1,76 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 700px;
+    height: 100vh;
+    background-color: #f9f9f9;
+    font-family: Arial, sans-serif;
+  }
+  
+  .title {
+    font-size: 32px;
+    font-family: 'SeoulNamsanM';
+    font-weight: bold;
+    margin-top: 70px;
+    color: #333;
+    text-align: center;
+  }
+
+  .tabs {
+    align-self: flex-start;
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
+    margin-left: 25%;
+  }
+  
+  .tab {
+    padding: 10px 20px;
+    background-color: #d9d9d9;
+    border-radius: 5px 5px 0px 0px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .tab.active {
+    background-color: #001b48;
+    color: #ffffff;
+  }
+  
+  .content {
+    display: flex;
+    width: 100%;
+    height: 70%;
+    overflow: hidden;
+  }
+  
+  .menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    background-color: #ffffff;
+    width: 20%;
+    padding: 10px;
+  }
+  
+  .menu-item {
+    margin: 10px 0;
+    font-size: 14px;
+    cursor: pointer;
+    color: #000000;
+  }
+
+  .menu-item.selected {
+    font-weight: bold;
+    color: #001b48;
+  }
+  
+  .content-area {
+    width: 100%;
+    background-color: #001b48;
+    border-radius: 10px;
+    color: #ffffff;
+  }
+  
