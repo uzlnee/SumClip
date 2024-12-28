@@ -1,0 +1,77 @@
+@font-face {
+    font-family: 'SeoulNamsanM';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/SeoulNamsanM.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+#root {
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    background-color: #f9f9f9;
+    font-family: Arial, sans-serif;
+}
+  
+/* 제목 스타일 */
+.title {
+    font-size: 32px;
+    font-family: 'SeoulNamsanM';
+    font-weight: bold;
+    margin-top: 70px;
+    color: #333;
+    text-align: center;
+}
+
+.main_div {
+    position: absolute;
+    width: 700px;
+    padding: 20px;
+    top: 50%;
+    left: 50%;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transform: translate(-50%, -50%);
+}
+
+.description {
+    margin-bottom: 20px;
+    font-family: 'SeoulNamsanM';
+    font-size: 1rem;
+    color: #0F1E46;
+}
+
+button {
+    font-family: 'SeoulNamsanM';
+    color: #FFFFFF;
+    background-color: #0F1E46;
+    cursor: pointer;
+    margin-top: 30px;
+}
+
+.search-url {
+    font-family: 'SeoulNamsanM';
+    padding: 10px;
+    color: #d9d9d9;
+    border-radius: 4px;
+    background-color: #0F1E46;
+    height: 20px;
+    width: 90%;
+}
+
+.search-url:focus {
+    color: #ffffff;
+}

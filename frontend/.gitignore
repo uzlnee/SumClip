@@ -1,8 +1,3 @@
-.env
-.venv
-.DS_Store
-__pycache__
-
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
@@ -12,7 +7,6 @@ __pycache__
 
 # testing
 /coverage
-video/
 
 # production
 /build

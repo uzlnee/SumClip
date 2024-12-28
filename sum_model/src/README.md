@@ -20,6 +20,14 @@ python3 summarize.py # 실행 시 일단은 터미널상에서 Response를 확�
 
 ```
 
+## 백 / 프론트 사용법
+```
+# 2개의 터미널 켜서
+# 1. 첫번째 터미널은 frontend 쪽으로 이동 후 npm run dev 실행 (실행 전 node.js 설치 필수, pip로 말고 프로그램 자체를)
+# 2. backend 실행 전 pip install fastapi uvicorn pydantic pydantic_settings 로 설치 환경 구축
+# 3. 두번째 터미널은 backend 쪽으로 이동 후 uvicorn app.main:app --reload --port 8000으로 실행
+```
+
 ## 참고용 Response
 
 ![poster](./screenshot/스크린샷%202024-12-19%20오전%2012.47.16.png)
