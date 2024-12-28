@@ -4,7 +4,7 @@ from glob import glob
 import pandas as pd
 import whisper
 from pydub import AudioSegment
-
+from summarize import summarizer
 
 class AudioTranslator:
     def __init__(self, model_name="base"):
@@ -50,11 +50,11 @@ def process_audio_from_videos(video_audio_paths: list):
         video_audio_paths (list): List of audio file paths.
     """
     translator = AudioTranslator()
-
+    
     for audio_path in video_audio_paths:
         # Get file name without extension
-        output_file = f"video/all_text.txt"
-
+        output_file = f"video/all_text_original.txt"
+        
         # Transcribe and save
         print(f"Processing audio: {audio_path}")
         result = translator.audio_to_text(audio_path)
@@ -62,7 +62,13 @@ def process_audio_from_videos(video_audio_paths: list):
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(result["text"])
         df.to_csv("video/segments.csv", index=False)
-
+        refiner = summarizer()
+        query = """당신은 오타를 교정하는 전문가입니다.
+                    주어진 Text의 오타를 알맞게 교정한 Text를 내보내 주세요."""
+        output_file = f"video/all_text_refined.txt"
+        response = refiner.generate(result['text'], query)
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(response)
 
 if __name__ == "__main__":
     # video_processing.py에서 제공하는 오디오 파일 경로 리스트를 여기에 사용

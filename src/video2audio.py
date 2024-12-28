@@ -5,7 +5,6 @@ import cv2
 import yt_dlp
 from moviepy import VideoFileClip
 
-
 def download_video_from_url(url: str):
     """
     Download a YouTube video from the given URL and save it locally.
