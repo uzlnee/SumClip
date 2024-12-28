@@ -1,7 +1,10 @@
 import os
 from urllib.parse import parse_qs, urlparse
 
+import koreanize_matplotlib
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from openai import OpenAI
@@ -74,6 +77,43 @@ def analyze_sentiment(client, text):
         return "분석 실패"
 
 
+def visualize_sentiment_analysis(df):
+    """댓글 감정 분석 결과를 시각화하는 함수"""
+    colors = {"긍정": "#2196F3", "부정": "#F44336", "중립": "#4CAF50"}
+
+    # 댓글 감정 분포 파이 차트
+    plt.figure(figsize=(8, 8))
+    sentiment_counts = df["sentiment"].value_counts()
+    plt.pie(
+        sentiment_counts,
+        labels=sentiment_counts.index,
+        colors=[colors[s] for s in sentiment_counts.index],
+        autopct="%1.1f%%",
+    )
+    plt.title("댓글 감정 분포", fontweight="bold")
+    plt.show()
+
+    # 인기 댓글 분석
+    plt.figure(figsize=(12, 8))
+    top_comments = df.nlargest(10, "likes").sort_values("likes", ascending=True)
+
+    # 긴 댓글 자르기
+    truncated_comments = top_comments["text"].apply(
+        lambda x: x[:50] + "..." if len(x) > 50 else x
+    )
+
+    bars = plt.barh(range(len(top_comments)), top_comments["likes"])
+    plt.yticks(range(len(top_comments)), truncated_comments, fontsize=8)
+
+    for i, bar in enumerate(bars):
+        bar.set_color(colors[top_comments.iloc[i]["sentiment"]])
+
+    plt.title("인기 댓글 분석 (TOP 10)", fontweight="bold")
+    plt.xlabel("좋아요 수", fontweight="bold")
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     youtube_api_key = os.getenv("YOUTUBE_API_KEY")
     openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -120,6 +160,10 @@ def main():
     print("\n=== 감정 분석 통계 ===")
     for sentiment, count in sentiment_stats.items():
         print(f"{sentiment}: {count}개")
+
+    # 감정 분석 시각화
+    print("\n=== 감정 분석 결과 ===")
+    visualize_sentiment_analysis(df)
 
 
 if __name__ == "__main__":
