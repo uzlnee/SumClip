@@ -1,5 +1,5 @@
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 
 import koreanize_matplotlib
 import matplotlib.pyplot as plt
@@ -8,9 +8,14 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
+
 from kiwipiepy import Kiwi
 from kiwipiepy.utils import Stopwords
 from wordcloud import WordCloud
+import networkx as nx
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
 
 # Kiwi 형태소 분석기 초기화
 kiwi = Kiwi()
@@ -131,6 +136,68 @@ def generate_barplot(nouns):
     plt.gca().invert_yaxis()  # 내림차순으로 정렬
     plt.show()
 
+def build_tree_structure(nouns, n_clusters=5):
+    """
+    명사 리스트에서 트리 계층 구조 데이터를 생성하는 함수
+    - TF-IDF와 K-Means를 사용해 클러스터링 후 계층 구조 생성
+    """
+    # 1. TF-IDF 벡터화
+    vectorizer = TfidfVectorizer()
+    X = vectorizer.fit_transform([' '.join(nouns)])
+    
+    # 2. K-Means 클러스터링
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    labels = kmeans.fit_predict(X.T)  # 명사별 클러스터 할당
+    
+    # 3. 클러스터별 키워드 추출
+    terms = vectorizer.get_feature_names_out()
+    cluster_keywords = defaultdict(list)
+    for idx, label in enumerate(labels):
+        cluster_keywords[f"Cluster {label+1}"].append(terms[idx])
+    
+    # 4. 트리 데이터 구조 생성
+    tree_data = {"name": "Root", "children": []}
+    for cluster, keywords in cluster_keywords.items():
+        tree_data["children"].append({
+            "name": cluster,
+            "children": [{"name": keyword} for keyword in keywords]
+        })
+    
+    return tree_data
+
+def build_plotly_tree(tree_data, parent=""):
+    """
+    Plotly 트리 다이어그램을 위한 데이터 생성
+    - 트리 데이터를 재귀적으로 탐색하여 labels, parents 리스트 생성
+    """
+    labels = []
+    parents = []
+    labels.append(tree_data["name"])
+    parents.append(parent)
+    for child in tree_data.get("children", []):
+        child_labels, child_parents = build_plotly_tree(child, tree_data["name"])
+        labels.extend(child_labels)
+        parents.extend(child_parents)
+    return labels, parents
+
+def visualize_tree_diagram(tree_data):
+    """
+    트리 계층 구조를 Plotly로 시각화하는 함수
+    """
+    labels, parents = build_plotly_tree(tree_data)
+
+    fig = go.Figure(go.Sunburst(
+        labels=labels,
+        parents=parents,
+        branchvalues="total"
+    ))
+
+    fig.update_layout(
+        title="트리 계층 구조 시각화",
+        margin=dict(t=50, l=25, r=25, b=25)
+    )
+
+    fig.show()
 
 def main(file_path):
     # 텍스트에서 명사 추출
@@ -147,3 +214,9 @@ def main(file_path):
 
     # 상위 20개 명사 빈도수 바 플롯 생성
     generate_barplot(nouns)
+
+    # 트리 계층 구조 생성
+    tree_structure = build_tree_structure(nouns, n_clusters=5)
+
+    # 트리 다이어그램 시각화
+    visualize_tree_diagram(tree_structure)
