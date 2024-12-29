@@ -6,7 +6,9 @@ function GetVideo() {
   const location = useLocation();
   const navigate = useNavigate();
   const [videoTitle, setVideoTitle] = useState(""); // 영상 제목 상태
-  const [summary, setSummary] = useState(null);
+  const [simpleSummary, setSimpleSummary] = useState("");
+  const [coreSummary, setCoreSummary] = useState("");
+  const [pointSummary, setPointSummary] = useState("");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
@@ -62,14 +64,7 @@ function GetVideo() {
 
     try {
       setProcessing(true);
-      setSummary(null);
       setError(null);
-
-      // const response = await fetch("/api/process", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ url: videoUrl }),
-      // });
 
       const response = await fetch(
         `${BACKEND_URL}/summarize?url=${encodeURIComponent(videoUrl)}`,
@@ -89,7 +84,7 @@ function GetVideo() {
         throw new Error(data.error);
       }
 
-      setSummary(data.summary);
+      setSimpleSummary(data.simple);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -132,7 +127,9 @@ function GetVideo() {
           ) : (
             <>
               <p className="video-title">{videoTitle}</p>
-              <p className="video-summary">{summary}</p>
+              <div className="video-summary">
+                <p><strong>간단 요약:</strong> {simpleSummary}</p>
+            </div>
             </>
           )}
       </div>
