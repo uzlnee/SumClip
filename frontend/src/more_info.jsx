@@ -4,10 +4,19 @@ import "./more_info.css";
 const Moreinfo = () => {
   const [activeTab, setActiveTab] = useState("전체 요약");
   const [activeMenuItem, setActiveMenuItem] = useState("Summary");
-  const [wordCloudUrl, setWordCloudUrl] = useState(null);
+  const [showTab, setShowTab] = useState(true);
+  const [wordCloudImg, setWordCloudImg] = useState(null);
+  const [simpleText, setSimpleText] = useState("");
+  const [coreText, setCoreText] = useState("");
+  const [pointText, setPointText] = useState("");
+  const [treeImg, setTreeImg] = useState(null);
+  const [barImg, setBarImg] = useState(null);
+  const [sankeyImg, setSankeyImg] = useState(null);
+  const [responseImg, setResponseImg] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const BACKEND_URL = "http://localhost:8000";
   const handleTabClick = (tabName) => {
     setActiveTab(tabName);
   };
@@ -15,68 +24,221 @@ const Moreinfo = () => {
   const handleMenuItemClick = (menuItemName) => {
     setActiveMenuItem(menuItemName);
     if (menuItemName === "Summary") {
-        setActiveTab("전체 요약");
+        setActiveTab("간단 요약");
+        setShowTab(true);
       } else if (menuItemName === "Infographic") {
         setActiveTab("키워드 클라우드");
+        setShowTab(true);
       } else if (menuItemName === "Response") {
-        setActiveTab("Positive");
+        setShowTab(false);
       }
+
   };
   
   const getTabs = () => {
     switch (activeMenuItem) {
       case "Infographic":
-        return ["키워드 클라우드", "마인드맵"];
-      case "Response":
-        return ["Positive", "Negative"];
+        return ["키워드 클라우드", "트리", "막대", "SANKEY"];
+      case "Summary":
+        return ["간단 요약", "핵심 내용", "중요 포인트"];
       default:
-        return ["전체 요약", "타임스탬프", "간단 요약"];
+        return []
     }
   };
 
-  // useEffect(() => {
-  //   if (activeTab === "키워드 클라우드") {
-  //     fetch("http://localhost:5000/wordcloud") // 백엔드 API 호출
-  //       .then((response) => {
-  //         if (response.ok) {
-  //           return response.blob();
-  //         }
-  //         throw new Error("Failed to fetch wordcloud");
-  //       })
-  //       .then((blob) => {
-  //         setWordCloudUrl(URL.createObjectURL(blob)); // 이미지 URL 생성
-  //       })
-  //       .catch((error) => console.error(error));
-  //   }
-  // }, [activeTab]);
-  
-  // useEffect(() => {
-  //   if (activeTab === "Positive") {
-  //     setLoading(true);
-  //     setError(null);
+  useEffect(() => {
+    if (activeTab === "간단 요약") {
+      setLoading(true);
+      fetch(`${BACKEND_URL}/summary/simple`)
+        .then((response) => {
+          if (response.ok) {
+            return response.text();
+          }
+          throw new Error("Failed to fetch simple summary");
+        })
+        .then((text) => {
+          setSimpleText(text);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setError(error.message);
+          setLoading(false);
+        });
+    }
+  }, [activeTab]);
 
-  //     fetch("http://localhost:5000/analyze_comments", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ video_url: "https://www.youtube.com/watch?v=YOUR_VIDEO_ID" }),
-  //     })
-  //       .then((response) => {
-  //         if (!response.ok) {
-  //           throw new Error("Failed to fetch comments");
-  //         }
-  //         return response.json();
-  //       })
-  //       .then((data) => {
-  //         setPositiveComments(data); // 데이터 저장
-  //       })
-  //       .catch((err) => {
-  //         setError(err.message);
-  //       })
-  //       .finally(() => {
-  //         setLoading(false);
-  //       });
-  //   }
-  // }, [activeTab]);
+  useEffect(() => {
+    if (activeTab === "핵심 내용") {
+      setLoading(true);
+      fetch(`${BACKEND_URL}/summary/core`)
+        .then((response) => {
+          if (response.ok) {
+            return response.text();
+          }
+          throw new Error("Failed to fetch core summary");
+        })
+        .then((text) => {
+          setCoreText(text);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setError(error.message);
+          setLoading(false);
+        });
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "중요 포인트트") {
+      setLoading(true);
+      fetch(`${BACKEND_URL}/summary/point`)
+        .then((response) => {
+          if (response.ok) {
+            return response.text();
+          }
+          throw new Error("Failed to fetch point summary");
+        })
+        .then((text) => {
+          setPointText(text);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setError(error.message);
+          setLoading(false);
+        });
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "키워드 클라우드") {
+      setLoading(true);
+      fetch(`${BACKEND_URL}/more/wordcloud`)
+        .then((response) => {
+          if (response.ok) {
+            return response.blob();
+          }
+          throw new Error("Failed to fetch wordcloud");
+        })
+        .then((blob) => {
+          setWordCloudImg(blob);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setError(error.message);
+          setLoading(false);
+      });
+    }
+  }, [activeTab]);
+  
+  useEffect(() => {
+    if (activeTab === "트리") {
+      setLoading(true);
+      fetch(`${BACKEND_URL}/more/tree`)
+        .then((response) => {
+          if (response.ok) {
+            return response.blob();
+          }
+          throw new Error("Failed to fetch tree image");
+        })
+        .then((blob) => {
+          setTreeImg(blob);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setError(error.message);
+          setLoading(false);
+        });
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "막대") {
+      setLoading(true);
+      fetch(`${BACKEND_URL}/more/bar`)
+        .then((response) => {
+          if (response.ok) {
+            return response.blob();
+          }
+          throw new Error("Failed to fetch bar image");
+        })
+        .then((blob) => {
+          setBarImg(blob);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setError(error.message);
+          setLoading(false);
+        });
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "SANKEY") {
+      setLoading(true);
+      fetch(`${BACKEND_URL}/more/sankey`)
+        .then((response) => {
+          if (response.ok) {
+            return response.blob();
+          }
+          throw new Error("Failed to fetch sankey image");
+        })
+        .then((blob) => {
+          setSankeyImg(blob);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setError(error.message);
+          setLoading(false);
+        });
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeMenuItem === "response") {
+      setLoading(true);
+      fetch(`${BACKEND_URL}/more/sentiment`)
+        .then((response) => {
+          if (response.ok) {
+            return response.blob();
+          }
+          throw new Error("Failed to fetch response image");
+        })
+        .then((blob) => {
+          setResponseImg(blob);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setError(error.message);
+          setLoading(false);
+        });
+    }
+  }, [activeTab]);
+
+  const renderImageFromBlob = (blob) => {
+    if (!blob) return null;
+    const url = URL.createObjectURL(blob); // Blob을 URL로 변환
+    return (
+      <img
+        src={url}
+        alt="Rendered"
+        style={{
+          maxWidth: "100%",
+          maxHeight: "100%",
+          display: "block",
+          margin: "0 auto",
+        }}
+        onLoad={() => URL.revokeObjectURL(url)} // 메모리 누수를 방지하기 위해 URL 해제
+      />
+    );
+  };
 
   return (
     <div className="container">
@@ -92,7 +254,12 @@ const Moreinfo = () => {
           </div>
         ))}
       </div>
-      <div className="content">
+      <div 
+        className="content"
+        style={{
+          marginTop: activeMenuItem === "Response" ? "41px" : "0px",
+        }}
+      >
         <div className="menu">
           {["Summary", "Infographic", "Response"].map((menuItemName) => (
             <div
@@ -107,35 +274,20 @@ const Moreinfo = () => {
           ))}
         </div>
         <div className="content-area">
-          {/* {activeTab === "키워드 클라우드" && wordCloudUrl && (
-            <img
-              src={wordCloudUrl}
-              alt="Word Cloud"
-              className="wordcloud-image"
-            />
+          {activeTab === "간단 요약" && !loading && !error && (
+            <div className="simple-text">{simpleText}</div>
           )}
-          {activeTab === "Positive" && (
-            <>
-              {loading ? (
-                <p>Loading comments...</p>
-              ) : error ? (
-                <p>Error: {error}</p>
-              ) : positiveComments.length > 0 ? (
-                <ul>
-                  {positiveComments.map((comment, index) => (
-                    <li key={index}>
-                      <p><strong>{comment.author}</strong>:</p>
-                      <p>{comment.text}</p>
-                      <p>Likes: {comment.likes}</p>
-                      <p>Published: {new Date(comment.published_at).toLocaleString()}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No positive comments found.</p>
-              )}
-            </>
-          )} */}
+          {activeTab === "핵심 내용" && !loading && !error && (
+            <div className="core-text">{coreText}</div>
+          )}
+          {activeTab === "중요 포인트" && !loading && !error && (
+            <div className="point-text">{pointText}</div>
+          )}
+          {activeTab === "키워드 클라우드" && renderImageFromBlob(wordCloudImg)}
+          {activeTab === "트리" && renderImageFromBlob(treeImg)}
+          {activeTab === "막대" && renderImageFromBlob(barImg)}
+          {activeTab === "SANKEY" && renderImageFromBlob(sankeyImg)}
+          {activeMenuItem === "response" && renderImageFromBlob(responseImg)}
         </div>
       </div>
     </div>
