@@ -91,7 +91,7 @@ const Moreinfo = () => {
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === "중요 포인트트") {
+    if (activeTab === "중요 포인트") {
       setLoading(true);
       fetch(`${BACKEND_URL}/summary/point`)
         .then((response) => {
@@ -201,7 +201,7 @@ const Moreinfo = () => {
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeMenuItem === "response") {
+    if (activeMenuItem === "Response") {
       setLoading(true);
       fetch(`${BACKEND_URL}/more/sentiment`)
         .then((response) => {
@@ -287,7 +287,7 @@ const Moreinfo = () => {
           {activeTab === "트리" && renderImageFromBlob(treeImg)}
           {activeTab === "막대" && renderImageFromBlob(barImg)}
           {activeTab === "SANKEY" && renderImageFromBlob(sankeyImg)}
-          {activeMenuItem === "response" && renderImageFromBlob(responseImg)}
+          {activeMenuItem === "Response" && renderImageFromBlob(responseImg)}
         </div>
       </div>
     </div>
