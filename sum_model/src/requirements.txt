@@ -4,3 +4,5 @@ opencv-python
 moviepy
 openai-whisper
 pydub
+koreanize_matplotlib
+kiwipiepy
