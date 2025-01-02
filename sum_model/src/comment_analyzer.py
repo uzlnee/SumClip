@@ -8,6 +8,7 @@ import seaborn as sns
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from openai import OpenAI
+import plotly.express as px
 
 load_dotenv()
 
@@ -23,7 +24,7 @@ def get_video_id(url):
     return None
 
 
-def get_comments(youtube, video_id, max_results=10):
+def get_comments(youtube, video_id, max_results=20):
     """YouTube 동영상의 인기 댓글을 가져오는 함수"""
     comments = []
 
@@ -78,40 +79,40 @@ def analyze_sentiment(client, text):
 
 
 def visualize_sentiment_analysis(df):
-    colors = {"긍정": "#2196F3", "부정": "#F44336", "중립": "#4CAF50"}
+    df = df.sort_values(by='published_at', ascending=False)
 
-    # 파이 차트
-    fig1, ax1 = plt.subplots(figsize=(8, 8))
-    sentiment_counts = df["sentiment"].value_counts()
-    ax1.pie(
-        sentiment_counts,
-        labels=sentiment_counts.index,
-        colors=[colors[s] for s in sentiment_counts.index],
-        autopct="%1.1f%%",
-    )
-    ax1.set_title("댓글 감정 분포", fontweight="bold")
-    fig1.show()
-
-    # 막대 그래프
-    fig2, ax2 = plt.subplots(figsize=(12, 8))
-    top_comments = df.nlargest(10, "likes").sort_values("likes", ascending=True)
-    truncated_comments = top_comments["text"].apply(
-        lambda x: x[:50] + "..." if len(x) > 50 else x
+    fig = px.scatter(
+        df,
+        x="published_at", 
+        y="likes",  
+        color="sentiment",  
+        color_discrete_map={"긍정": "skyblue", "부정": "pink", '중립': 'gray'}, 
+        hover_data={"text": True, "author": True,"likes": True, "sentiment" : False, 'published_at' : False },  # 툴팁 설정
+        title="댓글 반응",
+        labels={"likes": "Likes", "sentiment": "Sentiment"}
     )
 
-    bars = ax2.barh(range(len(top_comments)), top_comments["likes"])
-    ax2.set_yticks(range(len(top_comments)))
-    ax2.set_yticklabels(truncated_comments, fontsize=8)
+    fig.update_traces(marker=dict(size=15), 
+                    selector=dict(mode='markers')) 
 
-    for i, bar in enumerate(bars):
-        bar.set_color(colors[top_comments.iloc[i]["sentiment"]])
+    for i, sentiment in enumerate(df['sentiment'].unique()):
+        sentiment_color = {
+            '긍정': 'skyblue',
+            '부정': 'pink',
+            '중립': 'gray'
+        }[sentiment]
 
-    ax2.set_title("인기 댓글 분석 (TOP 10)", fontweight="bold")
-    ax2.set_xlabel("좋아요 수", fontweight="bold")
-    fig2.tight_layout()
-    fig2.show()
+        fig.update_traces(
+            hoverlabel=dict(bgcolor=sentiment_color), 
+            selector=dict(mode="markers", line=dict(color=sentiment_color))
+        )
+    fig.update_layout(
+        xaxis_title="시간대 별 댓글",
+        yaxis_title="좋아요 수",
+        )
 
-    plt.show(block=True)
+    # 그래프 출력
+    fig.show()
 
 
 def main():
@@ -145,10 +146,11 @@ def main():
 
     # 좋아요 수로 정렬
     df = df.sort_values("likes", ascending=False)
+    
 
     print("댓글 감정 분석 중...")
     df["sentiment"] = df["text"].apply(lambda x: analyze_sentiment(openai_client, x))
-
+    # return df
     print("\n=== 인기 댓글 감정 분석 결과 ===")
     for idx, row in df.iterrows():
         print(f"내용: {row['text']}")

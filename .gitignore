@@ -2,7 +2,6 @@
 .venv
 .DS_Store
 __pycache__
-<<<<<<< HEAD
 
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
@@ -28,10 +27,8 @@ video/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-=======
 video
 .env.save
->>>>>>> main
 
 .sumclipenv
 sumclipenv/
