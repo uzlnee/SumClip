@@ -118,7 +118,7 @@ def visualize_sentiment_analysis(df):
 
 
 def get_sentiment_df(video_url):
-    """YouTube 댓글의 감정 분석 결과를 DataFrame으로 반환"""
+    """YouTube 댓글의 감정 분석 결과를 DataFrame으로 반환하는 함수"""
     youtube_api_key = os.getenv("YOUTUBE_API_KEY")
     openai_api_key = os.getenv("OPENAI_API_KEY")
 
