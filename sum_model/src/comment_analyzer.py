@@ -77,7 +77,7 @@ def analyze_sentiment(client, text):
         print(f"감정 분석 중 오류 발생: {str(e)}")
         return "분석 실패"
 
-
+# 반응형 시각화를 그리는 부분입니다.
 def visualize_sentiment_analysis(df):
     df = df.sort_values(by='published_at', ascending=False)
 
