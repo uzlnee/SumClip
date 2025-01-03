@@ -78,8 +78,8 @@ def analyze_sentiment(client, text):
         return "분석 실패"
 
 
-# 반응형 시각화를 그리는 부분입니다.
 def visualize_sentiment_analysis(df):
+    """댓글 감정 분석 결과를 시각화하는 함수"""
     df = df.sort_values(by="published_at", ascending=False)
 
     fig = px.scatter(
