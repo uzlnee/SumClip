@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import "./more_info.css";
 
 const Moreinfo = () => {
-  const [activeTab, setActiveTab] = useState("전체 요약");
+  const [activeTab, setActiveTab] = useState("간단 요약");
   const [activeMenuItem, setActiveMenuItem] = useState("Summary");
   const [showTab, setShowTab] = useState(true);
   const [wordCloudImg, setWordCloudImg] = useState(null);
@@ -10,13 +11,12 @@ const Moreinfo = () => {
   const [coreText, setCoreText] = useState("");
   const [pointText, setPointText] = useState("");
   const [treeImg, setTreeImg] = useState(null);
-  const [barImg, setBarImg] = useState(null);
-  const [sankeyImg, setSankeyImg] = useState(null);
   const [responseImg, setResponseImg] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const BACKEND_URL = "http://localhost:8000";
+
   const handleTabClick = (tabName) => {
     setActiveTab(tabName);
   };
@@ -38,7 +38,7 @@ const Moreinfo = () => {
   const getTabs = () => {
     switch (activeMenuItem) {
       case "Infographic":
-        return ["키워드 클라우드", "트리", "막대", "SANKEY"];
+        return ["키워드 클라우드", "트리맵"];
       case "Summary":
         return ["간단 요약", "핵심 내용", "중요 포인트"];
       default:
@@ -47,184 +47,55 @@ const Moreinfo = () => {
   };
 
   useEffect(() => {
-    if (activeTab === "간단 요약") {
+    const fetchData = async () => {
       setLoading(true);
-      fetch(`${BACKEND_URL}/summary/simple`)
-        .then((response) => {
-          if (response.ok) {
-            return response.text();
-          }
-          throw new Error("Failed to fetch simple summary");
-        })
-        .then((text) => {
-          setSimpleText(text);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          setError(error.message);
-          setLoading(false);
-        });
-    }
-  }, [activeTab]);
+      setError(null);
 
-  useEffect(() => {
-    if (activeTab === "핵심 내용") {
-      setLoading(true);
-      fetch(`${BACKEND_URL}/summary/core`)
-        .then((response) => {
-          if (response.ok) {
-            return response.text();
-          }
-          throw new Error("Failed to fetch core summary");
-        })
-        .then((text) => {
-          setCoreText(text);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          setError(error.message);
-          setLoading(false);
-        });
-    }
-  }, [activeTab]);
+      try {
+        let response;
+        if (activeMenuItem === "Response") {
+          response = await fetch(`${BACKEND_URL}/more/sentiment`);
+        } else {
+          const endpoints = {
+            "간단 요약": "/summary/simple",
+            "핵심 내용": "/summary/core",
+            "중요 포인트": "/summary/point",
+            "키워드 클라우드": "/more/wordcloud",
+            "트리맵": "/more/tree",
+          };
+          response = await fetch(`${BACKEND_URL}${endpoints[activeTab]}`);
+        }
 
-  useEffect(() => {
-    if (activeTab === "중요 포인트") {
-      setLoading(true);
-      fetch(`${BACKEND_URL}/summary/point`)
-        .then((response) => {
-          if (response.ok) {
-            return response.text();
-          }
-          throw new Error("Failed to fetch point summary");
-        })
-        .then((text) => {
-          setPointText(text);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          setError(error.message);
-          setLoading(false);
-        });
-    }
-  }, [activeTab]);
+        if (!response.ok) throw new Error(`Failed to fetch ${activeTab}`);
 
-  useEffect(() => {
-    if (activeTab === "키워드 클라우드") {
-      setLoading(true);
-      fetch(`${BACKEND_URL}/more/wordcloud`)
-        .then((response) => {
-          if (response.ok) {
-            return response.blob();
-          }
-          throw new Error("Failed to fetch wordcloud");
-        })
-        .then((blob) => {
-          setWordCloudImg(blob);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          setError(error.message);
-          setLoading(false);
-      });
-    }
-  }, [activeTab]);
-  
-  useEffect(() => {
-    if (activeTab === "트리") {
-      setLoading(true);
-      fetch(`${BACKEND_URL}/more/tree`)
-        .then((response) => {
-          if (response.ok) {
-            return response.blob();
-          }
-          throw new Error("Failed to fetch tree image");
-        })
-        .then((blob) => {
-          setTreeImg(blob);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          setError(error.message);
-          setLoading(false);
-        });
-    }
-  }, [activeTab]);
+        if (activeTab === "키워드 클라우드" || activeTab === "트리맵" || activeMenuItem === "Response") {
+          const blob = await response.blob();
+          if (activeTab === "키워드 클라우드") setWordCloudImg(blob);
+          else if (activeTab === "트리맵") setTreeImg(blob);
+          else if (activeMenuItem === "Response") setResponseImg(blob);
+        } else {
+          const text = await response.text();
+          if (activeTab === "간단 요약") setSimpleText(text);
+          else if (activeTab === "핵심 내용") setCoreText(text);
+          else if (activeTab === "중요 포인트") setPointText(text);
+        }
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    if (activeTab === "막대") {
-      setLoading(true);
-      fetch(`${BACKEND_URL}/more/bar`)
-        .then((response) => {
-          if (response.ok) {
-            return response.blob();
-          }
-          throw new Error("Failed to fetch bar image");
-        })
-        .then((blob) => {
-          setBarImg(blob);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          setError(error.message);
-          setLoading(false);
-        });
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (activeTab === "SANKEY") {
-      setLoading(true);
-      fetch(`${BACKEND_URL}/more/sankey`)
-        .then((response) => {
-          if (response.ok) {
-            return response.blob();
-          }
-          throw new Error("Failed to fetch sankey image");
-        })
-        .then((blob) => {
-          setSankeyImg(blob);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          setError(error.message);
-          setLoading(false);
-        });
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (activeMenuItem === "Response") {
-      setLoading(true);
-      fetch(`${BACKEND_URL}/more/sentiment`)
-        .then((response) => {
-          if (response.ok) {
-            return response.blob();
-          }
-          throw new Error("Failed to fetch response image");
-        })
-        .then((blob) => {
-          setResponseImg(blob);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          setError(error.message);
-          setLoading(false);
-        });
-    }
-  }, [activeTab]);
+    fetchData();
+  }, [activeTab, activeMenuItem]);
 
   const renderImageFromBlob = (blob) => {
     if (!blob) return null;
-    const url = URL.createObjectURL(blob); // Blob을 URL로 변환
+    const url = URL.createObjectURL(blob);
+    useEffect(() => {
+      return () => URL.revokeObjectURL(url);
+    }, [blob]);
     return (
       <img
         src={url}
@@ -235,14 +106,15 @@ const Moreinfo = () => {
           display: "block",
           margin: "0 auto",
         }}
-        onLoad={() => URL.revokeObjectURL(url)} // 메모리 누수를 방지하기 위해 URL 해제
       />
     );
   };
 
   return (
     <div className="container">
-      <h1 className="title">SUMCLIP</h1>
+      <Link to="/" className="title">
+        SUMCLIP
+      </Link>
       <div className="tabs">
         {getTabs().map((tabName) => (
           <div
@@ -274,8 +146,11 @@ const Moreinfo = () => {
           ))}
         </div>
         <div className="content-area">
+          {loading && <div className="loading">Loading...</div>}
+          {error && <div className="error">{error}</div>}
           {activeTab === "간단 요약" && !loading && !error && (
             <div className="simple-text">{simpleText}</div>
+            
           )}
           {activeTab === "핵심 내용" && !loading && !error && (
             <div className="core-text">{coreText}</div>
@@ -284,9 +159,7 @@ const Moreinfo = () => {
             <div className="point-text">{pointText}</div>
           )}
           {activeTab === "키워드 클라우드" && renderImageFromBlob(wordCloudImg)}
-          {activeTab === "트리" && renderImageFromBlob(treeImg)}
-          {activeTab === "막대" && renderImageFromBlob(barImg)}
-          {activeTab === "SANKEY" && renderImageFromBlob(sankeyImg)}
+          {activeTab === "트리맵" && renderImageFromBlob(treeImg)}
           {activeMenuItem === "Response" && renderImageFromBlob(responseImg)}
         </div>
       </div>

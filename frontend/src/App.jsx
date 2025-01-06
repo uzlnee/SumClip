@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate, Link } from "react-router-dom";
 import './App.css'
 import GetVideo from "./get_video";
 import Moreinfo from './more_info';
@@ -18,7 +18,9 @@ function MainPage() {
 
   return (
     <div className="container">
-      <h1 className="title">SUMCLIP</h1>
+      <Link to="/" className="title">
+        SUMCLIP
+      </Link>
       <div className="main_div">
         <p className='description'>바쁘디바쁜 현대사회를 살아가고 있는 현대인들의 시간을 아끼기 위한 영상 요약 써-비스</p>
         <input 

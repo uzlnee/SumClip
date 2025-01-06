@@ -1,3 +1,10 @@
+@font-face {
+    font-family: 'SeoulNamsanM';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/SeoulNamsanM.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
 .container {
     display: flex;
     flex-direction: column;
@@ -5,7 +12,7 @@
     width: 1000px;
     height: 100vh;
     background-color: #f9f9f9;
-    font-family: Arial, sans-serif;
+    font-family: 'SeoulNamsanM';
   }
   
   .title {
@@ -15,6 +22,11 @@
     margin-top: 70px;
     color: #333;
     text-align: center;
+  }
+
+  .title:hover {
+    color: black;
+    text-decoration: none;
   }
 
   .tabs {
@@ -57,14 +69,16 @@
   
   .menu-item {
     margin: 10px 0;
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
     color: #000000;
+    font-family: 'SeoulNamsanM';
   }
 
   .menu-item.selected {
     font-weight: bold;
     color: #001b48;
+    font-family: 'SeoulNamsanM';
   }
   
   .content-area {
@@ -72,5 +86,6 @@
     background-color: #001b48;
     border-radius: 10px;
     color: #ffffff;
+    font-family: 'SeoulNamsanM';
   }
   
