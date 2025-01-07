@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import './get_video.css'
 
 function GetVideo() {
@@ -101,7 +101,9 @@ function GetVideo() {
 
   return (
     <div className="container">
-      <h1 className="title">SUMCLIP</h1>
+      <Link to="/" className="title">
+        SUMCLIP
+      </Link>
       <div className="video-card">
         <div className="video-card-header">
           <div className="action-container" onClick={() => navigate("/")}>
@@ -120,13 +122,13 @@ function GetVideo() {
             <span className="action-text">자세히 보러가기</span>
           </div>
         </div>
+        <p className="video-title">{videoTitle}</p>
         {loading ? (
             <p className="loading">로딩 중...</p>
           ) : error ? (
             <p className="error">에러 발생: {error}</p>
           ) : (
             <>
-              <p className="video-title">{videoTitle}</p>
               <div className="video-summary">
                 <p><strong>간단 요약:</strong> {simpleSummary}</p>
             </div>
