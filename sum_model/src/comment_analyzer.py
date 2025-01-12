@@ -4,11 +4,11 @@ from urllib.parse import parse_qs, urlparse
 import koreanize_matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
+import plotly.express as px
 import seaborn as sns
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from openai import OpenAI
-import plotly.express as px
 
 load_dotenv()
 
@@ -79,40 +79,71 @@ def analyze_sentiment(client, text):
 
 
 def visualize_sentiment_analysis(df):
-    df = df.sort_values(by='published_at', ascending=False)
+    """댓글 감정 분석 결과를 시각화하는 함수"""
+    df = df.sort_values(by="published_at", ascending=False)
 
     fig = px.scatter(
         df,
-        x="published_at", 
-        y="likes",  
-        color="sentiment",  
-        color_discrete_map={"긍정": "skyblue", "부정": "pink", '중립': 'gray'}, 
-        hover_data={"text": True, "author": True,"likes": True, "sentiment" : False, 'published_at' : False },  # 툴팁 설정
+        x="published_at",
+        y="likes",
+        color="sentiment",
+        color_discrete_map={"긍정": "skyblue", "부정": "pink", "중립": "gray"},
+        hover_data={
+            "text": True,
+            "author": True,
+            "likes": True,
+            "sentiment": False,
+            "published_at": False,
+        },  # 툴팁 설정
         title="댓글 반응",
-        labels={"likes": "Likes", "sentiment": "Sentiment"}
+        labels={"likes": "Likes", "sentiment": "Sentiment"},
     )
 
-    fig.update_traces(marker=dict(size=15), 
-                    selector=dict(mode='markers')) 
+    fig.update_traces(marker=dict(size=15), selector=dict(mode="markers"))
 
-    for i, sentiment in enumerate(df['sentiment'].unique()):
-        sentiment_color = {
-            '긍정': 'skyblue',
-            '부정': 'pink',
-            '중립': 'gray'
-        }[sentiment]
+    for i, sentiment in enumerate(df["sentiment"].unique()):
+        sentiment_color = {"긍정": "skyblue", "부정": "pink", "중립": "gray"}[sentiment]
 
         fig.update_traces(
-            hoverlabel=dict(bgcolor=sentiment_color), 
-            selector=dict(mode="markers", line=dict(color=sentiment_color))
+            hoverlabel=dict(bgcolor=sentiment_color),
+            selector=dict(mode="markers", line=dict(color=sentiment_color)),
         )
     fig.update_layout(
         xaxis_title="시간대 별 댓글",
         yaxis_title="좋아요 수",
-        )
+    )
 
     # 그래프 출력
     fig.show()
+
+
+def get_sentiment_df(video_url):
+    """YouTube 댓글의 감정 분석 결과를 DataFrame으로 반환하는 함수"""
+    youtube_api_key = os.getenv("YOUTUBE_API_KEY")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    if not youtube_api_key or not openai_api_key:
+        raise ValueError("API 키가 설정되지 않았습니다. .env 파일을 확인해주세요.")
+
+    # API 클라이언트 초기화
+    youtube = build("youtube", "v3", developerKey=youtube_api_key)
+    openai_client = OpenAI(api_key=openai_api_key)
+
+    video_id = get_video_id(video_url)
+    if not video_id:
+        raise ValueError("올바른 YouTube URL이 아닙니다.")
+
+    # 댓글 가져오기
+    comments = get_comments(youtube, video_id)
+    if not comments:
+        raise ValueError("댓글을 가져올 수 없습니다.")
+
+    # DataFrame 생성 및 감정 분석
+    df = pd.DataFrame(comments)
+    df = df.sort_values("likes", ascending=False)
+    df["sentiment"] = df["text"].apply(lambda x: analyze_sentiment(openai_client, x))
+
+    return df
 
 
 def main():
@@ -146,7 +177,6 @@ def main():
 
     # 좋아요 수로 정렬
     df = df.sort_values("likes", ascending=False)
-    
 
     print("댓글 감정 분석 중...")
     df["sentiment"] = df["text"].apply(lambda x: analyze_sentiment(openai_client, x))
