@@ -13,7 +13,8 @@ function GetVideo() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_KEY = "AIzaSyCI9AppENCFt1tU9iTkYbl83OTW27E1P2k";
+  const API_KEY = import.meta.env.API_KEY;
+  // const API_KEY = "AIzaSyCI9AppENCFt1tU9iTkYbl83OTW27E1P2k";
   const BACKEND_URL = "http://localhost:8000";
   // URL에서 query parameter를 가져오는 함수
   const getQueryParam = (param) => {
