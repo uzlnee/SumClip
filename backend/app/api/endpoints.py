@@ -3,16 +3,15 @@ from sqlalchemy.orm import Session
 from app.services.video2audio import process_youtube_video
 from app.services.audio2text import AudioTranslator, process_audio_from_videos
 from app.services.summarize import summarizer
-from app.services.TextViz import generate_wordcloud, generate_sankey_diagram,\
-    generate_barplot, build_tree_structure, visualize_tree_diagram, extract_nouns_from_text,\
-    create_cooccurrence_matrix
-from app.services.comment_analyzer import visualize_sentiment_analysis
+from app.services.TextViz import generate_wordcloud, extract_nouns_from_text, generate_treemap_with_squarify
+from app.services.comment_analyzer import visualize_sentiment_analysis, get_sentiment_df
 from app.models import schemas
 from app.core.database import get_db
 from app.models.models import Video, Analysis
 import sys
 import os
 import openai
+import base64
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 import logging
@@ -20,10 +19,19 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
-
+def verify_environment():
+    required_vars = ["OPENAI_API_KEY", "DATABASE_URL"]
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    if missing_vars:
+        raise ValueError(f"필수 환경 변수가 없습니다: {','.join(missing_vars)}")
+    
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 load_dotenv(os.path.join(BASE_DIR, ".env"))
+
+verify_environment()
+
+router = APIRouter()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -38,7 +46,7 @@ async def get_summary(url: str, db:Session = Depends(get_db)):
 
         os.makedirs(video_dir, exist_ok=True)
 
-        audio_file_path = process_youtube_video(url)
+        audio_file_path = await process_youtube_video(url)
         print(f"Video processed successfully: {audio_file_path}")
 
         audio_path = os.path.normpath(os.path.join(backend_dir, audio_file_path))
@@ -49,7 +57,7 @@ async def get_summary(url: str, db:Session = Depends(get_db)):
             print(f"Directory contents: {os.listdir(os.path.dirname(audio_path))}")
             raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
-        process_audio_from_videos([audio_path])
+        await process_audio_from_videos([audio_path])
         print("Audio translated successfully")
 
         text_path = os.path.normpath(os.path.join(video_dir, "all_text.txt"))
@@ -63,7 +71,7 @@ async def get_summary(url: str, db:Session = Depends(get_db)):
                                 [핵심 내용]
                                 [중요 포인트]
                                 입니다."""
-        simple, core, point = model.generate(text, query)
+        simple, core, point = await model.generate(text, query)
 
         video = Video(
             youtube_link=url,
@@ -77,13 +85,12 @@ async def get_summary(url: str, db:Session = Depends(get_db)):
 
         text_path = os.path.normpath(os.path.join(video_dir, "all_text.txt"))
         nouns = extract_nouns_from_text(text_path)
+        sentiment_df = get_sentiment_df(url)
 
         visualizations = {
             'wordcloud': generate_wordcloud(nouns),
-            'sankey': generate_sankey_diagram(create_cooccurrence_matrix(nouns)),
-            'barplot': generate_barplot(nouns),
-            'tree': visualize_tree_diagram(build_tree_structure(nouns)),
-            'sentiment': visualize_sentiment_analysis(text),
+            'tree': generate_treemap_with_squarify(nouns),
+            'sentiment': visualize_sentiment_analysis(sentiment_df),
         }
 
         for viz_type, image_data in visualizations.items():
@@ -116,87 +123,25 @@ async def get_summary(url: str, db:Session = Depends(get_db)):
             detail=str(e)
         )
 
-@router.get("/more/wordcloud")
-async def get_wordcloud(db: Session = Depends(get_db)):
-    try:
-        analysis = db.query(Analysis)\
-            .filter(Analysis.analysis_type == "wordcloud")\
-            .order_by(Analysis.video_id.desc())\
-            .first()
-        
-        if not analysis:
-            raise HTTPException(status_code=404, detail="Cannot find wordcloud")
-        
-        return {
-            "wordcloud": analysis.image_data
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@router.get("/more/{analysis_type}")
+async def get_analysis(analysis_type: str, db:Session = Depends(get_db)):
+    valid_types = ["wordcloud", "sentiment", "treemap"]
+    if analysis_type not in valid_types:
+        raise HTTPException(status_code=400, detail="유효하지 않은 분석 타입")
     
-@router.get("/more/sentiment")
-async def get_sentiment(db: Session = Depends(get_db)):
     try:
         analysis = db.query(Analysis)\
-            .filter(Analysis.analysis_type == "sentiment")\
+            .filter(Analysis.analysis_type == analysis_type)\
             .order_by(Analysis.video_id.desc())\
             .first()
-        
-        if not analysis:
-            raise HTTPException(status_code=404, detail="Cannot find sentiment")
-        
-        return {
-            "sentiment": analysis.image_data
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
     
-@router.get("/more/sankey")
-async def get_sankey(db: Session = Depends(get_db)):
-    try:
-        analysis = db.query(Analysis)\
-            .filter(Analysis.analysis_type == "sankey")\
-            .order_by(Analysis.video_id.desc())\
-            .first()
-        
         if not analysis:
-            raise HTTPException(status_code=404, detail="Cannot find sankey")
+            raise HTTPException(status_code=404, detail=f"{analysis_type}를 찾을 수 없음")
         
+        image_base64 = base64.b64encode(analysis.image_data).decode('utf-8')
+
         return {
-            "sankey": analysis.image_data
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@router.get("/more/bar")
-async def get_bar(db: Session = Depends(get_db)):
-    try:
-        analysis = db.query(Analysis)\
-            .filter(Analysis.analysis_type == "barplot")\
-            .order_by(Analysis.video_id.desc())\
-            .first()
-        
-        if not analysis:
-            raise HTTPException(status_code=404, detail="Cannot find barplot")
-        
-        return {
-            "barplot": analysis.image_data
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@router.get("/more/tree")
-async def get_tree(db: Session = Depends(get_db)):
-    try:
-        analysis = db.query(Analysis)\
-            .filter(Analysis.analysis_type == "tree")\
-            .order_by(Analysis.video_id.desc())\
-            .first()
-        
-        if not analysis:
-            raise HTTPException(status_code=404, detail="Cannot find tree")
-        
-        return {
-            "tree": analysis.image_data
+            "image_data": f"data:image/{analysis.image_format};base64, {image_base64}"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

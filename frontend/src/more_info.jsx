@@ -38,7 +38,7 @@ const Moreinfo = () => {
   const getTabs = () => {
     switch (activeMenuItem) {
       case "Infographic":
-        return ["키워드 클라우드", "트리맵"];
+        return ["키워드 클라우드", "트리 다이어그램"];
       case "Summary":
         return ["간단 요약", "핵심 내용", "중요 포인트"];
       default:
@@ -90,24 +90,36 @@ const Moreinfo = () => {
     fetchData();
   }, [activeTab, activeMenuItem]);
 
-  const renderImageFromBlob = (blob) => {
-    if (!blob) return null;
+  const renderImage = (imageData) => {
+    if (!imageData) return null;
     const url = URL.createObjectURL(blob);
-    useEffect(() => {
-      return () => URL.revokeObjectURL(url);
-    }, [blob]);
+    // useEffect(() => {
+    //   return () => URL.revokeObjectURL(url);
+    // }, [blob]);
+    // return (
+    //   <img
+    //     src={url}
+    //     alt="Rendered"
+    //     style={{
+    //       maxWidth: "100%",
+    //       maxHeight: "100%",
+    //       display: "block",
+    //       margin: "0 auto",
+    //     }}
+    //   />
+    // );
     return (
       <img
-        src={url}
-        alt="Rendered"
-        style={{
-          maxWidth: "100%",
-          maxHeight: "100%",
-          display: "block",
-          margin: "0 auto",
-        }}
+          src={`data:image/png;base64,${imageData}`}
+          alt="Rendered"
+          style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              display: "block",
+              margin: "0 auto",
+          }}
       />
-    );
+  );
   };
 
   return (

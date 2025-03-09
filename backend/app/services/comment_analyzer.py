@@ -5,6 +5,7 @@ import koreanize_matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import plotly.express as px
 import io
 import base64
 from PIL import Image
@@ -78,57 +79,73 @@ def analyze_sentiment(client, text):
     except Exception as e:
         print(f"감정 분석 중 오류 발생: {str(e)}")
         return "분석 실패"
+    
+def get_sentiment_df(video_url):
+    """YouTube 댓글의 감정 분석 결과를 DataFrame으로 반환하는 함수"""
+    youtube_api_key = os.getenv("YOUTUBE_API_KEY")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    if not youtube_api_key or not openai_api_key:
+        raise ValueError("API 키가 설정되지 않았습니다. .env 파일을 확인해주세요.")
+
+    # API 클라이언트 초기화
+    youtube = build("youtube", "v3", developerKey=youtube_api_key)
+    openai_client = OpenAI(api_key=openai_api_key)
+
+    video_id = get_video_id(video_url)
+    if not video_id:
+        raise ValueError("올바른 YouTube URL이 아닙니다.")
+
+    # 댓글 가져오기
+    comments = get_comments(youtube, video_id)
+    if not comments:
+        raise ValueError("댓글을 가져올 수 없습니다.")
+
+    # DataFrame 생성 및 감정 분석
+    df = pd.DataFrame(comments)
+    df = df.sort_values("likes", ascending=False)
+    df["sentiment"] = df["text"].apply(lambda x: analyze_sentiment(openai_client, x))
+
+    return df
 
 
 def visualize_sentiment_analysis(df):
-    colors = {"긍정": "#2196F3", "부정": "#F44336", "중립": "#4CAF50"}
-    image_data = {}
+    df = df.sort_values(by="published_at", ascending=False)
 
-    # 파이 차트
-    fig1, ax1 = plt.subplots(figsize=(8, 8))
-    sentiment_counts = df["sentiment"].value_counts()
-    ax1.pie(
-        sentiment_counts,
-        labels=sentiment_counts.index,
-        colors=[colors[s] for s in sentiment_counts.index],
-        autopct="%1.1f%%",
-    )
-    ax1.set_title("댓글 감정 분포", fontweight="bold")
-    # fig1.show()
-
-    # 파이 차트 이미지 저장
-    pie_buffer = io.BytesIO()
-    fig1.savefig(pie_buffer, format='png', bbox_inches='tight')
-    plt.close(fig1)
-    image_data['pie_chart'] = pie_buffer.getvalue()
-
-    # 막대 그래프
-    fig2, ax2 = plt.subplots(figsize=(12, 8))
-    top_comments = df.nlargest(10, "likes").sort_values("likes", ascending=True)
-    truncated_comments = top_comments["text"].apply(
-        lambda x: x[:50] + "..." if len(x) > 50 else x
+    fig = px.scatter(
+        df,
+        x="published_at",
+        y="likes",
+        color="sentiment",
+        color_discrete_map={"긍정": "skyblue", "부정": "pink", "중립": "gray"},
+        hover_data={
+            "text": True,
+            "author": True,
+            "likes": True,
+            "sentiment": False,
+            "published_at": False,
+        },  # 툴팁 설정
+        title="댓글 반응",
+        labels={"likes": "Likes", "sentiment": "Sentiment"},
     )
 
-    bars = ax2.barh(range(len(top_comments)), top_comments["likes"])
-    ax2.set_yticks(range(len(top_comments)))
-    ax2.set_yticklabels(truncated_comments, fontsize=8)
+    fig.update_traces(marker=dict(size=15), selector=dict(mode="markers"))
 
-    for i, bar in enumerate(bars):
-        bar.set_color(colors[top_comments.iloc[i]["sentiment"]])
+    for sentiment in df["sentiment"].unique():
+        sentiment_color = {"긍정": "skyblue", "부정": "pink", "중립": "gray"}[sentiment]
 
-    ax2.set_title("인기 댓글 분석 (TOP 10)", fontweight="bold")
-    ax2.set_xlabel("좋아요 수", fontweight="bold")
-    fig2.tight_layout()
-    # fig2.show()
+        fig.update_traces(
+            hoverlabel=dict(bgcolor=sentiment_color),
+            selector=dict(mode="markers", line=dict(color=sentiment_color)),
+        )
+    fig.update_layout(
+        xaxis_title="시간대 별 댓글",
+        yaxis_title="좋아요 수",
+    )
 
-    bar_buffer = io.BytesIO()
-    fig2.savefig(bar_buffer, format='png', bbox_inches='tight')
-    plt.close(fig2)
-    image_data['bar_chart'] = bar_buffer.getvalue()
-
-    # plt.show(block=True)
-
-    return image_data
+    # 그래프 출력
+    img_bytes = fig.to_image(format="png")
+    return base64.b64encode(img_bytes).decode()
 
 
 def main():
