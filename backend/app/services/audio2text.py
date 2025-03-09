@@ -4,6 +4,7 @@ from glob import glob
 import pandas as pd
 import whisper
 from pydub import AudioSegment
+from .summarize import summarizer
 
 
 class AudioTranslator:
@@ -49,19 +50,29 @@ def process_audio_from_videos(video_audio_paths: list):
     Args:
         video_audio_paths (list): List of audio file paths.
     """
-    translator = AudioTranslator()
-
-    for audio_path in video_audio_paths:
-        # Get file name without extension
-        output_file = f"video/all_text.txt"
-
-        # Transcribe and save
-        print(f"Processing audio: {audio_path}")
-        result = translator.audio_to_text(audio_path)
-        df = pd.DataFrame(result["segments"])[["id", "start", "end", "text"]]
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(result["text"])
-        df.to_csv("video/segments.csv", index=False)
+    try:
+        translator = AudioTranslator()
+    
+        for audio_path in video_audio_paths:
+            # Get file name without extension
+            output_file = f"video/all_text_original.txt"
+            
+            # Transcribe and save
+            print(f"Processing audio: {audio_path}")
+            result = translator.audio_to_text(audio_path)
+            df = pd.DataFrame(result["segments"])[["id", "start", "end", "text"]]
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(result["text"])
+            df.to_csv("video/segments.csv", index=False)
+            refiner = summarizer()
+            query = """당신은 오타를 교정하는 전문가입니다.
+                        주어진 Text의 오타를 알맞게 교정한 Text를 내보내 주세요."""
+            output_file = f"video/all_text_refined.txt"
+            response = refiner.generate(result['text'], query)
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(response)
+    except Exception as e:
+        raise Exception(f"오디오 처리 중 오류 발생: {str(e)}")
 
 
 if __name__ == "__main__":
